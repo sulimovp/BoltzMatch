@@ -1,0 +1,38 @@
+
+=== 1. int16 overflow in generate_unique_theoretical_peaks (highres)
+max_bin at 0.05 Da = 40000 (int16 max = 32767)
+true bins   : [28993, 29793, 32715, 33515]
+stored bins : [-32021, 2942, 3742, 6664] ... (negative = wrapped)
+wrapped peaks: 1 of 18
+
+=== 2. rbm_vb gets exactly zero gradient (same term on both phases)
+|grad vb| = 2.8773698090844846e-07  |grad hb| = 1.7303435802459717  |grad W| = 1.64427649974823
+
+=== 3. weight_update with uint8 diagonal mask on torch 2.12.0+cu130
+FAILS: RuntimeError masked_fill_ only supports boolean masks, but got mask with dtype unsigned char
+dense mask memory at 0.05 Da: 1.6 GB
+
+=== 4. `args.resolution is 'lowres'` with -r lowres on the command line
+identity check: False -> plot_weights never runs when -r is passed (as in RUN_TEST.sh)
+
+=== 5. boltzmatch_tailor_scoring: score/peptide misalignment for heaviest spectra
+candidates are peptides 22..24; correct winner = P24; reported winner = P22
+
+=== 6. spectrum_batch_generator: "shuffle" and the dropped tail
+identical order across epochs: True | spectra used: 896 of 1001 | first batch starts [0, 500, 1, 501, 2, 502]
+
+=== 7. target lost when an earlier decoy has the same sequence
+collection: [('ACDEFGK', 'decoy')]
+
+=== 8. score scale used in training vs. in the Python search
+train: s.W.h + hb.h   |  search: (s.W.h)*50/200 + vb.s + hb.h + 10, then /Tailor quantile
+-> learned hb is weighted 4x more at search time than during training;
+   training also keeps only top-100 peaks (topN_exp) but transofrm_spectra does not
+
+=== 9. APIs removed in the current stack
+pandas 2.2.2 DataFrame.append exists: False
+numpy 1.26.4 (np.float_ removed in NumPy 2.0; used in every mzML config string)
+Bio.Alphabet removed in Biopython 1.78 (Sept 2020) -> dbsearch.py import fails
+
+=== 10. div_reg closed form matches and avoids the 8128 x d pair matrices
+reference 295.859711  closed form 295.859741  rel.err 1.0e-07

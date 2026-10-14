@@ -5,6 +5,9 @@ Anastasia Voronkova, Pavel Sulimov, and Attila Kertesz-Farkas
 National Research University Higher School of Economics (HSE), Moscow, Russia
 
 
+> **Fork note (sulimovp):** a 2026 code review of this repository — confirmed bugs, mismatches with the paper and the Crux scripts, the Kertész-Farkas lab's later work (Tailor, Slider, Tide 4.3, HR-XPV), and the current state of the field — is in [docs/REVIEW.md](docs/REVIEW.md). The bug checks are in `tests/verify_bugs.py`.
+
+
 ## INSTALLATION
 Download the code. 
 
