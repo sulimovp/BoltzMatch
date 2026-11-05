@@ -84,3 +84,7 @@ It will be added later.
 
 
 
+
+## Open before further work: novelty review
+
+No independent novelty and prior-work review has been done for the current claims (flagged 2026-11-05, when the active papers got theirs). Before resuming work on this paper, have a reviewer with no prior context search and read the closest prior work and write `notes/NOVELTY_REVIEW_<date>.md`: the claims, a table of the closest works with an overlap verdict (scooped / partial / adjacent), what is new, what is at risk, and how to position the paper.
