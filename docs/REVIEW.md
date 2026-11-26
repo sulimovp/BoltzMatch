@@ -264,3 +264,45 @@ git lfs pull --include="fasta/ups1.zip,ms_data/UPS1.recalre.zip"
 ```
 
 The full benchmark needs the modified Crux from `kfattila/crux-toolkit`, or Tide 4.3, which now supports Tailor.
+
+
+## 10. External review, 25 Nov 2026
+
+An independent review by Gemini 4 Neon (Google Antigravity) read this repo on 25 Nov 2026 without running anything. Every finding was then checked against the repo. The review is `docs/GEMINI_REVIEW_2026-11-25.md`; the check, with a verdict per finding and the evidence, is `docs/GEMINI_REVIEW_2026-11-25.verdicts.md`. Only findings that held up (fully or in part) are listed. Nothing here changes a registered gate or threshold; items marked [Pavel] need his decision, and any change to a registered rule goes in as a dated amendment first.
+
+New findings:
+
+1. The hidden bias `hb` is used in training (`models.py` L63-69) and in the Python score that picks the
+   epoch (`dbsearch.py` L572), but `utils.py` L125-134 puts it in `peptide.bias` and `dbsearch.py` L685-700
+   writes only `spectrum_array` to the `.ms2`, so Crux scores without it. Its gradient is larger than that
+   of `W` (`docs/verify_output.txt` L9: 1.73 against 1.64). Export it, or drop it from the selection
+   score, then measure the effect on the 2020 numbers.
+2. `div_reg` is dominated by zero rows: skipped spectra stay as all-zero rows whose hidden activations
+   equal `hb`, and `abs(mean(...))` lets terms cancel (`utils.py` L47, L55-57, L383, L387;
+   `rbm_train_main.py` L123).
+3. Corrections to this file: arXiv 2509.24952 (Winnow) is a decoy-free FDR estimator, not an entrapment
+   evaluation; the `models.py` line references (L226-271) are out of date (the file has 73 lines) and the
+   `utils.py` ones are off; README L58, L59, L68 spell `rbm_trian_main.py`; the Winkelhardt et al. DOI
+   here (10.64898/2026.03.04.709532v1) and the review's (10.1101/2026.03.06.709532) could not be found.
+4. Evaluation scripts: `TIDE_SEARCH_HUMVAR.sh` L22-23, L29-30, L59-60, L66-67 run without `--fileroot` but
+   with `--overwrite T` (check whether the second call overwrites the first); Yeast uses 50 ppm in Tide
+   against 3 Da elsewhere; OMSSA and X!Tandem allow 0 missed cleavages in 8 of 9 configurations against 1
+   in Tide.
+5. Training: fragment charge 1 only (`parameters.py` L19; +2 fragments omitted, effect unchecked) and a
+   summed rather than mean NLL (`rbm_train_main.py` L143-150).
+6. Minor: `rbm_train_main.py` L201 (`is 'lowres'`), `dbsearch.py` L618.
+
+Already in sections 3 and 4 and confirmed: int16 overflow (C1), the broken library stack, batching and
+dedup (M6, M7), Tailor misalignment (M8; the sign flip for negative norms is plausible, untested), the wrong
+iPRG dataset (C3), in-sample training (M9).
+
+Checked and not taken up: no decoy leak through the epoch choice (Python decoys reverse peptides with fixed
+termini, Crux reverses proteins); the Tide flags are shared by both arms, so the baseline is not
+handicapped; MS Amanda `MaxNumberModSites` limits modification sites, not methionines; ">40 GB" for the
+40,000 x 40,000 model is not shown (about 19 GB for W, gradient and momentum in float32).
+
+Citations to check: MS^2Rescore 3.0 (search finds J Proteome Res 23 (2024) 3200-3207, not MCP 23(4)
+100718); a 2026 Bioinformatics paper for yHydra.
+
+Ideas worth keeping: a dense-versus-Toeplitz capacity framing next to Slider; an exchangeability theory for
+the FDR estimate; predicted-intensity residual calibration and chimeric deconvolution.
